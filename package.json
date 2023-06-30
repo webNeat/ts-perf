@@ -1,0 +1,31 @@
+{
+  "name": "ts-perf",
+  "author": "Amine Ben hammou",
+  "description": "A library and command line tool to measure the compile time performance of Typescript code.",
+  "license": "MIT",
+  "version": "1.0.0-alpha.0",
+  "repository": "webNeat/ts-perf",
+  "homepage": "https://github.com/webNeat/ts-perf",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "scripts": {
+    "test": "tsc --noEmit",
+    "build": "rm -rf dist && tsc"
+  },
+  "dependencies": {
+    "@types/node": "^18.15.11",
+    "tslib": "^2.5.0",
+    "typescript": "^5.0.3",
+    "fast-glob": "^3.3.0",
+    "ts-morph": "^19.0.0"
+  }
+}
