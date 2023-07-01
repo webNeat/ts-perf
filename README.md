@@ -8,7 +8,16 @@ A small library to measure the compile time performance of Typescript code.
 
 # Contents
 
-
+- [Installation](#installation)
+- [Use cases](#use-cases)
+  - [Measuring a file by path](#measuring-a-file-by-path)
+  - [Measuring a code snippet](#measuring-a-code-snippet)
+  - [Writing performance tests for Typescript types](#writing-performance-tests-for-typescript-types)
+- [API reference](#api-reference)
+  - [measurePath](#measure-path)
+  - [measureCode](#measure-code)
+- [Contributing](#contributing)
+- [Changelog](#changelog)
 
 # Installation
 
@@ -20,7 +29,7 @@ npm i -D ts-perf
 yarn add -D ts-perf
 ```
 
-# Simple usages
+# Use cases
 
 ## Measuring a file by path
 
@@ -29,7 +38,7 @@ Measuring how much time it takes Typescript compiler to parse and type-check a f
 ```ts
 import {measurePath} from 'ts-perf'
 
-const durationInMiliseconds = await measurePath('path/to/file')
+const durationInMiliseconds = measurePath('path/to/file')
 ```
 
 if there are compilation errors in the file, the `measurePath` function will throw the formatted error message.
@@ -48,13 +57,11 @@ if we run the following code
 ```ts
 import {measurePath} from 'ts-perf'
 
-(async () => {
-  try {
-    await measurePath('src/file.ts')
-  } catch (error) {
-    console.log(error);
-  }
-})()
+try {
+  measurePath('src/file.ts')
+} catch (error) {
+  console.log(error);
+}
 ```
 
 it will show the following error
@@ -75,13 +82,15 @@ if you want to measure the compilation performance of some code without creating
 ```ts
 import {measureCode} from 'ts-perf'
 
-const durationInMiliseconds = await measureCode(`
+const durationInMiliseconds = measureCode('temp.ts', `
   function add(x: number, y: number) {
     return x + y
   }
   add('foo', 'bar')
 `)
 ```
+
+This will create a virtual file `temp.ts` with the provided code and measure it. It's equivalent to creating the file manually then calling `measurePath` with its path.
 
 Similar to `measurePath`, `measureCode` will throw formatted compilation error if any.
 
@@ -93,21 +102,19 @@ if you are using VSCode, you can use the extension [es6-string-typescript](https
 
 **Using import statements inside the code snippets**
 
-You can use `import` statements inside the code snippets and they will be resolved relative normally (if you use `measureCode` inside the file `src/foo.ts`, `ts-perf` will evaluate the code snippet as if it was inside the file `src/foo__ts-perf.ts`, so all relative imports will work).
+You can use `import` statements inside the code snippets and they will be resolved relative to the provided path (To make thing easier, you can provide `__filename` as path and use imports relative to the current file).
 
 ```ts
 import {measureCode} from 'ts-perf'
 
-(async () => {
-  try {
-    await measureCode(/*ts*/`
-      import {add} from './math'
-      add('foo', 2)
-    `)
-  } catch (error) {
-    console.log(error);
-  }
-})()
+try {
+  measureCode(__filename, `
+    import {add} from './math'
+    add('foo', 2)
+  `)
+} catch (error) {
+  console.log(error);
+}
 ```
 
 ## Writing performance tests for Typescript types
@@ -118,7 +125,8 @@ Writing a performance test can be as simple as doing
 
 ```ts
 it('takes less than a second to typecheck the code', async () => {
-  expect(await measureCode(`some code using the custom type ...`)).toBeLessThan(1000) 
+  const ms = measureCode(`some code using the custom type ...`)
+  expect(ms).toBeLessThan(1000) 
 })
 ```
 
@@ -127,24 +135,21 @@ it('takes less than a second to typecheck the code', async () => {
 ## measurePath
 
 ```ts
-import { ProjectOptions } from 'ts-morph'
-function measurePath(path: string, options?: ProjectOptions): Promise<number>
+function measurePath(path: string): number
 ```
 
 - `path`: Path to the Typescript file to measure.
-- `options`: Optional options that will be passed to the `ts-morph` project instance. You can use it to specify the path to tsconfig file and other config options [check `ts-morph` docs for more details](https://ts-morph.com/setup/).
 
 **Return:** A Promise that resolves to the duration of parsing and typechecking the file in miliseconds, or rejects with the compilation errors if any.
 
 ## measureCode
 
 ```ts
-import { ProjectOptions } from 'ts-morph'
-function measureCode(code: string, options?: ProjectOptions): Promise<number>
+function measureCode(path: string, code: string): number
 ```
 
+- `path`: Path to the Typescript file.
 - `code`: The code snippet to measure.
-- `options`: Optional options that will be passed to the `ts-morph` project instance. You can use it to specify the path to tsconfig file and other config options [check `ts-morph` docs for more details](https://ts-morph.com/setup/).
 
 **Return:** A Promise that resolves to the duration of parsing and typechecking the code in miliseconds, or rejects with the compilation errors if any.
 
@@ -160,6 +165,12 @@ Those are just examples, any issue or pull request is welcome :)
 
 # Changelog
 
+**1.0.0-beta.2 (July 1st 2023)**
+
+- Make the functions synchronous.
+- Use the `typescript` Compiler API directly instead of `ts-morph`.
+- Add simple tests.
+
 **1.0.0-beta.1 (July 1st 2023)**
 
-First beta version
+- First beta version.
