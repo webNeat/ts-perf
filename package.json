@@ -3,7 +3,7 @@
   "author": "Amine Ben hammou",
   "description": "A library and command line tool to measure the compile time performance of Typescript code.",
   "license": "MIT",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.2",
   "repository": "webNeat/ts-perf",
   "homepage": "https://github.com/webNeat/ts-perf",
   "main": "dist/index.js",
@@ -18,13 +18,17 @@
     "node": ">=16"
   },
   "scripts": {
-    "test": "echo 'TODO'",
+    "test": "tsx tests/run.ts",
     "build": "rm -rf dist && tsc"
   },
   "dependencies": {
     "@types/node": "^20.3.3",
-    "ts-morph": "^19.0.0",
     "tslib": "^2.5.0",
     "typescript": "^5.0.3"
+  },
+  "devDependencies": {
+    "just-types": "^2.0.0-alpha.2",
+    "prettier": "^2.8.8",
+    "tsx": "^3.12.7"
   }
 }
