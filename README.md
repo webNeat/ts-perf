@@ -38,10 +38,15 @@ Measuring how much time it takes Typescript compiler to parse and type-check a f
 ```ts
 import {measurePath} from 'ts-perf'
 
-const durationInMiliseconds = measurePath('path/to/file')
+const res = await measurePath('path/to/file')
+if (res.success) {
+  console.log('duration', res.duration)
+} else {
+  console.error(res.errors)
+}
 ```
 
-if there are compilation errors in the file, the `measurePath` function will throw the formatted error message.
+if there are compilation errors in the file, then `res.errors` will be the formatted error message.
 
 For example, given the following `file.ts`
 
@@ -52,19 +57,7 @@ function add(x: number, y: number) {
 add('foo', 'bar')
 ```
 
-if we run the following code
-
-```ts
-import {measurePath} from 'ts-perf'
-
-try {
-  measurePath('src/file.ts')
-} catch (error) {
-  console.log(error);
-}
-```
-
-it will show the following error
+`res.errors` will be
 
 ```
 file.ts:5:5 - error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
@@ -82,17 +75,22 @@ if you want to measure the compilation performance of some code without creating
 ```ts
 import {measureCode} from 'ts-perf'
 
-const durationInMiliseconds = measureCode('temp.ts', `
+const res = await measureCode('temp.ts', `
   function add(x: number, y: number) {
     return x + y
   }
   add('foo', 'bar')
 `)
+if (res.success) {
+  console.log('duration', res.duration)
+} else {
+  console.error(res.errors)
+}
 ```
 
 This will create a virtual file `temp.ts` with the provided code and measure it. It's equivalent to creating the file manually then calling `measurePath` with its path.
 
-Similar to `measurePath`, `measureCode` will throw formatted compilation error if any.
+Similar to `measurePath`, `measureCode` will return formatted compilation error if any.
 
 **Adding syntax highlighting to code snippets**
 
@@ -102,19 +100,15 @@ if you are using VSCode, you can use the extension [es6-string-typescript](https
 
 **Using import statements inside the code snippets**
 
-You can use `import` statements inside the code snippets and they will be resolved relative to the provided path (To make thing easier, you can provide `__filename` as path and use imports relative to the current file).
+You can use `import` statements inside the code snippets and they will be resolved relative to the provided path (to make things easier, you can provide `__filename` as path and use imports relative to the current file).
 
 ```ts
 import {measureCode} from 'ts-perf'
 
-try {
-  measureCode(__filename, `
-    import {add} from './math'
-    add('foo', 2)
-  `)
-} catch (error) {
-  console.log(error);
-}
+const res = await measureCode(__filename, /*ts*/ `
+  import {add} from './math'
+  add('foo', 2)
+`)
 ```
 
 ## Writing performance tests for Typescript types
@@ -125,8 +119,8 @@ Writing a performance test can be as simple as doing
 
 ```ts
 it('takes less than a second to typecheck the code', async () => {
-  const ms = measureCode(`some code using the custom type ...`)
-  expect(ms).toBeLessThan(1000) 
+  const res = await measureCode(`some code using the custom type ...`)
+  expect(res.duration).toBeLessThan(1000) 
 })
 ```
 
@@ -135,23 +129,31 @@ it('takes less than a second to typecheck the code', async () => {
 ## measurePath
 
 ```ts
-function measurePath(path: string): number
+type Result = 
+  | { success: true; duration: number }
+  | { success: false; errors: string }
+
+function measurePath(path: string): Promise<Result>
 ```
 
 - `path`: Path to the Typescript file to measure.
 
-**Return:** A Promise that resolves to the duration of parsing and typechecking the file in miliseconds, or rejects with the compilation errors if any.
+**Return:** A Promise that resolves to `{success: true, duration}` if there were no errors (duration is in miliseconds), or resolves to `{success: false, errors}` if some error happens.
 
 ## measureCode
 
 ```ts
-function measureCode(path: string, code: string): number
+type Result = 
+  | { success: true; duration: number }
+  | { success: false; errors: string }
+
+function measureCode(path: string, code: string): Promise<Result>
 ```
 
 - `path`: Path to the Typescript file.
 - `code`: The code snippet to measure.
 
-**Return:** A Promise that resolves to the duration of parsing and typechecking the code in miliseconds, or rejects with the compilation errors if any.
+**Return:** A Promise that resolves to `{success: true, duration}` if there were no errors (duration is in miliseconds), or resolves to `{success: false, errors}` if some error happens.
 
 # Contributing
 
@@ -164,6 +166,11 @@ You can contribute to this library in many ways, including:
 Those are just examples, any issue or pull request is welcome :)
 
 # Changelog
+
+**1.0.0-beta.3 (August 28th 2023)**
+
+- Make each call to `measurePath` or `measureCode` run a separate Node process to isolate measurements.
+- The functions now return a Promise that resolves to `{success: true, duration}` or `{success: false, errors: string}`.
 
 **1.0.0-beta.2 (July 1st 2023)**
 
