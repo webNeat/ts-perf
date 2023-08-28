@@ -3,7 +3,7 @@
   "author": "Amine Ben hammou",
   "description": "A library to measure the compile time performance of Typescript code.",
   "license": "MIT",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "repository": "webNeat/ts-perf",
   "homepage": "https://github.com/webNeat/ts-perf",
   "main": "dist/index.js",
